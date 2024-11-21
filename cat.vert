@@ -1,6 +1,4 @@
-#ifdef GL_ES
 precision mediump float;
-#endif
 
 // our vertex data (set by p5)
 // this will be in the World Coordinate space

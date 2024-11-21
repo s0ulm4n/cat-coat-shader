@@ -1,15 +1,13 @@
-// Author:
-// Title:
-
-#ifdef GL_ES
 precision mediump float;
-#endif
 
 varying vec2 vTexCoord;
 uniform sampler2D uTexture;
+uniform sampler2D uBodyMask;
+uniform sampler2D uExtremitiesMask;
 
 uniform vec3 uOrangeColor;
 uniform vec3 uBlackColor;
+uniform vec3 uEyeColor;
 
 /**
 * Locus B determines the intensity of the black/brown pigment.
@@ -19,7 +17,7 @@ uniform vec3 uBlackColor;
 *
 * Dominant O gene blocks production of black pigment.
 */
-uniform ivec2 uLocusB; // ✅
+// uniform ivec2 uLocusB; // ✅
 
 /**
 * Locus O determines the production of yellow pigment.
@@ -63,7 +61,7 @@ uniform ivec2 uLocusO; // ✅
 * However, cats with the dominant orange gene (O) will always exhibit tabby pattern, either on the entire body,
 * or, in case of tortoiseshell cats, on the orange-colored parts. The pattern can be hard to notice though.
 */
-uniform ivec2 uLocusA; // ✅
+// uniform ivec2 uLocusA; // ✅
 /**
 * Tabby gene controls the pattern of the coat. There are three alleles:
 * 0 - "ticked" pattern allele (t_a). Dominant over all other alleles.
@@ -74,7 +72,7 @@ uniform ivec2 uLocusA; // ✅
 * (t_m/t_m) and (t_m/t_b) - mackerel pattern.
 * (t_b/t_b) - blotched pattern.
 */
-uniform ivec2 uLocusT;
+// uniform ivec2 uLocusT;
 /**
 * Spotted gene is directly connected to (t_m) allele. In mackerel tabby cats, it "breaks" the lines,
 * creating a spotted pattern.
@@ -84,7 +82,7 @@ uniform ivec2 uLocusT;
 * A spotted cat will have a (Sp/Sp) or (Sp/sp) genotype in this locus, along with at least one (t_m) allele
 * and at least one (A) allele.
 */
-uniform ivec2 uLocusSp;
+// uniform ivec2 uLocusSp;
 
 /**
 * Locus C is the "master gene" for pigment formation. When the gene is active, both black and yellow
@@ -118,24 +116,6 @@ uniform ivec2 uLocusC; // ✅
 * The actual patterns of spots are complicated, and I am not going to figure them out.
 */
 uniform ivec2 uLocusW; // ✅
-
-// Non-diluted black pigmentation
-// const vec3 COLOR_BLACK = vec3(0.0);
-// const vec3 COLOR_CHOCOLATE = vec3(0.369, 0.239, 0.188);
-// const vec3 COLOR_CINNAMON = vec3(0.631, 0.428, 0.306);
-// // Diluted black pigmentation
-// const vec3 COLOR_BLUE = vec3(0.373, 0.369, 0.413); // aka Gray
-// const vec3 COLOR_LILAC = vec3(0.686, 0.592, 0.628);
-// const vec3 COLOR_FAWN = vec3(0.729, 0.624, 0.565);
-// // Double dilution (dilution + dilution modifier)
-// const vec3 COLOR_CARAMEL = vec3(0.788, 0.753, 0.694); // aka Blue-based caramel
-// const vec3 COLOR_TAUPE = vec3(0.827, 0.8, 0.737); // aka Taupe-based caramel
-// const vec3 COLOR_FAWN_CARAMEL = vec3(0.875, 0.847, 0.784);
-
-// // Orange pigmentation
-// const vec3 COLOR_ORANGE = vec3(0.953, 0.667, 0.204); // aka Red
-// const vec3 COLOR_CREAM = vec3(0.984, 0.910, 0.784); // diluted Orange
-// const vec3 COLOR_APRICOT = vec3(0.980, 0.760, 0.176); // double-diluted Orange
 
 const vec3 COLOR_WHITE = vec3(1.0);
 
@@ -203,33 +183,6 @@ vec2 map(in vec2 p) {
     return p;
 }
 
-// TODO: diluted colors are a bit too bright
-// vec3 getColorDilution(in vec3[3]colorFamily, in ivec2 locusD, in ivec2 locusDm) {
-    //     bool hasDominantDilutionAllele = false;
-    //     if (locusD[0] == 0 || locusD[1] == 0) {
-        //         hasDominantDilutionAllele = true;
-    //     }
-    
-    //     bool hasDominantDilutionModificationAllele = false;
-    //     if (locusDm[0] == 0 || locusDm[1] == 0) {
-        //         hasDominantDilutionModificationAllele = true;
-    //     }
-    
-    //     if (hasDominantDilutionAllele) {
-        //         // Dominant allele in locus D is non-diluted
-        //         return colorFamily[0];
-    //     } else if (!hasDominantDilutionModificationAllele) {
-        //         // Recessive alleles in locus D result in dilution,
-        //         // but the recessive allele in locus Dm has no effect.
-        //         return colorFamily[1];
-    //     } else {
-        //         // Recessive allele in locus D is further modified by the
-        //         // dominant allele in locus Dm.
-        //         return colorFamily[2];
-    //     }
-// }
-
-// TODO: the pattern looks less like a cat and more like orange fog.
 vec3 getTortoiseshellPattern(in vec2 uv, in vec3 orange, in vec3 black) {
     float f = 0.0;
     
@@ -245,43 +198,11 @@ vec3 getTortoiseshellPattern(in vec2 uv, in vec3 orange, in vec3 black) {
     return orange * f + black * (1.0 - f);
 }
 
-vec3 getBaseColor(
-    in vec2 uv
-    // in ivec2 locusB,
-    // in ivec2 locusO,
-    // in ivec2 locusD,
-    // in ivec2 locusDm
-) {
-    // vec3 orangeColorFamily[3];
-    // orangeColorFamily[0] = COLOR_ORANGE;
-    // orangeColorFamily[1] = COLOR_CREAM;
-    // orangeColorFamily[2] = COLOR_APRICOT;
-    // vec3 orange = getColorDilution(orangeColorFamily, locusD, locusDm);
-    
+vec3 getBaseColor(in vec2 uv) {
     if (uLocusO[0] == 0 && uLocusO[1] == 0) {
         // Both orange alleles are dominant, no black will be present
         return uOrangeColor;
     }
-    
-    // vec3 blackColorFamily[3];
-    // if (locusB[0] == 0 || locusB[1] == 0) {
-        //     // Dominant black allele is present
-        //     blackColorFamily[0] = COLOR_BLACK;
-        //     blackColorFamily[1] = COLOR_BLUE;
-        //     blackColorFamily[2] = COLOR_CARAMEL;
-    // } else if (locusB[0] == 1 || locusB[1] == 1) {
-        //     // Dominant black allele isn't present, but chocolate allele is
-        //     // present (and it's dominant over cinnamon allele)
-        //     blackColorFamily[0] = COLOR_CHOCOLATE;
-        //     blackColorFamily[1] = COLOR_LILAC;
-        //     blackColorFamily[2] = COLOR_TAUPE;
-    // } else {
-        //     // Both locus B alleles are recessive cinnamon
-        //     blackColorFamily[0] = COLOR_CINNAMON;
-        //     blackColorFamily[1] = COLOR_FAWN;
-        //     blackColorFamily[2] = COLOR_FAWN_CARAMEL;
-    // }
-    // vec3 black = getColorDilution(blackColorFamily, locusD, locusDm);
     
     if (uLocusO[0] == 1 && uLocusO[1] == 1) {
         // Both orange alleles are recessive, no orange will be present.
@@ -293,7 +214,6 @@ vec3 getBaseColor(
     return getTortoiseshellPattern(uv, uOrangeColor, uBlackColor);
 }
 
-// TODO: Spotting looks horrible with tabby
 float getWhiteSpotting(in vec2 uv, in ivec2 locusW) {
     if (locusW[0] == 0 || locusW[1] == 0) {
         // Dominant W allele in locus W causes complete whiteness
@@ -318,8 +238,6 @@ float getWhiteSpotting(in vec2 uv, in ivec2 locusW) {
     return 1.0;
 }
 
-// TODO: Tweak the values to get darker corners
-// TODO: introduce other variants of colorpoint
 float getColorpoint(in vec2 uv, in ivec2 locusC) {
     if (locusC[0] == 0 || locusC[1] == 0) {
         // Dominant allele in locus C does not produce colorpoint
@@ -327,82 +245,58 @@ float getColorpoint(in vec2 uv, in ivec2 locusC) {
     }
     
     float d = distance(uv, vec2(0.5));
-    return smoothstep(0.3, 0.8, d);
-    return d * d;
+    return smoothstep(0.3, 0.5, d);
+    // return d * d;
 }
 
-// float getTabbyPattern(
-    //     in vec2 uv,
-    //     in ivec2 locusA,
-    //     in ivec2 locusT,
-    //     in ivec2 locusSP,
-    //     in ivec2 locusO
-// ) {
-    //     const int AA = 2;
+float getColorpointForNoseAndEars(in vec2 uv, in ivec2 locusC) {
+    if (locusC[0] == 0 || locusC[1] == 0) {
+        // Dominant allele in locus C does not produce colorpoint
+        return 1.0;
+    }
     
-    //     if (locusA[0] == 0 || locusA[1] == 0 || locusO[0] == 0 || locusO[1] == 0) {
-        //         // The dominant allele in the Agouti gene makes the pattern manifest
-        //         // The dominant allele in the Orange locus enforces the pattern
-        //         // even if the dominant A allele isn't present!
-        
-        //         float tot = 0.0;
-        //         for(int m = 0; m < AA; m ++ )
-        //         for(int n = 0; n < AA; n ++ )
-        //         {
-            //             vec2 o = vec2(float(m), float(n)) / float(AA) - 0.5;
-            //             vec2 p = (1.4 * (gl_FragCoord.xy + o) - uResolution.xy) / uResolution.y;
-            
-            //             // deformation
-            //             vec2 q = map(p);
-            //             //vec2 q = vec2(1.0,0.0);
-            
-            //             // color
-            //             float w = 6.0 * q.x;
-            //             float u = floor(w);
-            //             float f = fract(w);
-            //             // float col = sin(3.0 * u + 1.0);
-            //             float col = clamp(sin(3.0 * u + 1.0), 0.6, 0.9);
-            
-            //             tot += col;
-        //         }
-        //         tot /= float(AA * AA);
-        
-        //         return tot;
-    //     }
-    
-    //     return 1.0;
-// }
+    float d = distance(uv, vec2(0.8, 0.25));
+    return smoothstep(0.1, 0.3, d);
+}
 
-// TODO: I think I need more rules about which functions get called based on
-// the inputs. For example, tabby pattern shouldn't be applied on top of
-// the white spots.
 void main() {
     vec2 uv = vTexCoord;
     uv.y = 1.0 - uv.y;
     
     vec4 tex = texture2D(uTexture, uv);
-    vec3 color = tex.rgb;
+    vec4 bodyMask = texture2D(uBodyMask, uv);
+    vec4 extremitiesMask = texture2D(uExtremitiesMask, uv);
     
-    color *= getBaseColor(
-        uv
-        // uLocusB,
-        // uLocusO,
-        // uLocusD,
-        // uLocusDm
-    );
+    vec3 baseColor = getBaseColor(uv);
+    float whiteness = getWhiteSpotting(uv, uLocusW);
+    float colorpoint = getColorpoint(uv, uLocusC);
+    float extrColorpoint = getColorpointForNoseAndEars(uv, uLocusC);
     
-    color = 1.0 - getWhiteSpotting(uv, uLocusW) * (1.0 - color);
+    vec3 bodyColor = tex.rgb;
     
-    color = 1.0 - getColorpoint(uv, uLocusC) * (1.0 - color);
+    // Apply base color to the body
+    bodyColor *= baseColor;
+    // Apply white spotting (or make the entire body white)
+    bodyColor = 1.0 - (whiteness * (1.0 - bodyColor) + (1.0 - whiteness) * tex.rgb * 0.05);
+    // Apply colorpoint
+    bodyColor = 1.0 - (colorpoint * (1.0 - bodyColor) + (1.0 - colorpoint) * tex.rgb * 0.05);
+    // Apply the mask (only keep the color on the body)
+    bodyColor.rgb = min(bodyColor.rgb, bodyMask.r);
     
-    // // This needs to be a lot less extreme.
-    // // The variation in color should be relatively minimal.
-    // // Also, ideally the stripes themselves shouldn't be solid, but
-    // // a little hazy instead.
-    // if (color.r + color.g + color.b < 2.9) { // - this is a bad way of doing this!
-        //     color = color * getTabbyPattern(uv, uLocusA, uLocusT, uLocusSp, uLocusO);
-    // }
+    vec3 extrColor = tex.rgb;
+    
+    // Color ears and nose using base color
+    extrColor *= baseColor * step(0.5, uv.x);
+    // Apply whiteness on the ears and nose
+    extrColor = 1.0 - (whiteness * (1.0 - extrColor) + (1.0 - whiteness) * tex.rgb * 0.05);
+    // Apply colorpoint to the ears using a different function
+    extrColor = 1.0 - (extrColorpoint * (1.0 - extrColor) + (1.0 - extrColorpoint) * tex.rgb * 0.05);
+    // Color eyes using the eye color uniform
+    extrColor += uEyeColor * tex.rgb * (1.0 - step(0.5, uv.x));
+    // Apply the mask (only keep the color for extremities)
+    extrColor.rgb = min(extrColor.rgb, extremitiesMask.r);
+    
+    vec3 color = bodyColor + extrColor;
     
     gl_FragColor = vec4(color, 1.0);
 }
-

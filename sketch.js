@@ -1,9 +1,9 @@
 // 3D model of a cat
 let catModel;
-// Shader used to colorize the cat's coat
+
+// Shader to colorize the cat's coat and features
 let catShader;
-// Shader used to colorize the cat's eyes
-let eyesShader;
+
 // Graphics buffer used to render the shaders onto before applying it
 // as a texture to the model.
 let graphics;
@@ -22,14 +22,12 @@ function preload() {
   catModel = loadModel("/assets/12221_Cat_v1_l3.obj", true);
 
   catShader = loadShader("cat.vert", "cat.frag");
-  eyesShader = loadShader("cat.vert", "eyes.frag");
 
-  catStripedTexture = loadImage("/assets/cat_striped_bump.png");
-  // catStripedTexture = loadImage("/assets/cat_striped_bump copy.jpg");
-  catStripedEyesTexture = loadImage("/assets/cat_striped_eyes.png");
-  catSolidTexture = loadImage("/assets/cat_solid_bump.png");
-  // catSolidTexture = loadImage("/assets/cat_solid_bump copy.png");
-  catSolidEyesTexture = loadImage("/assets/cat_solid_eyes.png");
+  catStripedTexture = loadImage("/assets/cat_striped_bump.jpg");
+  catSolidTexture = loadImage("/assets/cat_solid_bump.jpg");
+
+  catTextureBodyMask = loadImage("/assets/cat_texture_body_mask.png");
+  catTextureExtremitiesMask = loadImage("/assets/cat_texture_extremities_mask.png");
 }
 
 function setup() {
@@ -57,7 +55,7 @@ function draw() {
   // Disable some options based on the selected ones
   checkLocusInterdependence();
   // Read the selected options and pass them into the shader
-  passLocusValuesIntoShader(catShader);
+  let uniforms = calculateUniforms();
 
   let catTexture;
   // Select the textures based on whether the cat is going to be striped or not
@@ -71,11 +69,15 @@ function draw() {
 
   // Pass the selected coat texture into the coat shader
   catShader.setUniform("uTexture", catTexture);
-
-  // Pass the selected eye texture into the eye shader
-  // TODO: programmatically select eye color
-  eyesShader.setUniform("uTexture", catEyesTexture);
-  eyesShader.setUniform("uEyeColor", [0.63, 0.8, 0.94]);
+  catShader.setUniform("uBodyMask", catTextureBodyMask);
+  catShader.setUniform("uExtremitiesMask", catTextureExtremitiesMask);
+  catShader.setUniform("uOrangeColor", uniforms.uOrangeColor);
+  catShader.setUniform("uBlackColor", uniforms.uBlackColor);
+  catShader.setUniform("uLocusO", uniforms.uLocusO);
+  catShader.setUniform("uLocusW", uniforms.uLocusW);
+  catShader.setUniform("uLocusC", uniforms.uLocusC);
+  // TODO: generate based on input/random
+  catShader.setUniform("uEyeColor", [0.63, 0.79, 0.85]);
 
   // This allows us to rotate the model (and zoom in and out) using the mouse
   orbitControl();
@@ -83,10 +85,6 @@ function draw() {
   // Pass the coat shader into the graphics layer
   graphics.shader(catShader);
   // Create the geometry for the coat shader to render on.
-  graphics.rect(0, 0, width, height);
-
-  // Now do the same thing with the eye shader
-  graphics.shader(eyesShader);
   graphics.rect(0, 0, width, height);
 
   // After rendering both shaders on top of each other, pass the resulting
@@ -104,5 +102,5 @@ function draw() {
 
   // DEBUG
   // Draw the shader on the background plane
-  // image(shaderTexture, 0, 0);
+  // image(graphics, -width / 2, -height / 2, width, height);
 }

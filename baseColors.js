@@ -11,7 +11,7 @@ const ORANGE_COLOR_FAMILY = {
 // a total of 3 x 3 = 9 colors.
 const BLACK_COLOR_FAMILY = {
     BLACK: {
-        BASE: [0.0, 0.0, 0.0], // Black
+        BASE: [0.15, 0.15, 0.15], // Black
         DILUTED: [0.373, 0.369, 0.413], // Blue aka Grey
         DILUTED_MODIFIED: [0.788, 0.753, 0.694], // Caramel aka Blue-based caramel
     },

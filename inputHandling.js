@@ -96,10 +96,12 @@ function createRadioButtons() {
     locusWRadio.selected(LOCUS_W_OPTIONS.NO_WHITE);
 }
 
-function passLocusValuesIntoShader(shader) {
-    const colors = getBaseColors(locusBRadio.value(), locusDRadio.value(), locusDmRadio.value());
-    shader.setUniform("uOrangeColor", colors.orange);
-    shader.setUniform("uBlackColor", colors.black);
+function calculateUniforms() {
+    const colors = getBaseColors(
+        locusBRadio.value(),
+        locusDRadio.value(),
+        locusDmRadio.value(),
+    );
 
     let locusBValue;
     switch (locusBRadio.value()) {
@@ -112,7 +114,6 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_B_OPTIONS.CINNAMON:
             locusBValue = [2, 2];
     }
-    shader.setUniform("uLocusB", locusBValue);
 
     let locusOValue;
     switch (locusORadio.value()) {
@@ -125,27 +126,6 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_O_OPTIONS.NON_ORANGE:
             locusOValue = [1, 1];
     }
-    shader.setUniform("uLocusO", locusOValue);
-
-    // let locusDValue;
-    // switch (locusDRadio.value()) {
-    //     case LOCUS_D_OPTIONS.NON_DILUTE:
-    //         locusDValue = [0, 0];
-    //         break;
-    //     case LOCUS_D_OPTIONS.DILUTE:
-    //         locusDValue = [1, 1];
-    // }
-    // shader.setUniform("uLocusD", locusDValue);
-
-    // let locusDmValue;
-    // switch (locusDmRadio.value()) {
-    //     case LOCUS_DM_OPTIONS.MODIFIED:
-    //         locusDmValue = [0, 0];
-    //         break;
-    //     case LOCUS_DM_OPTIONS.NOT_MODIFIED:
-    //         locusDmValue = [1, 1];
-    // }
-    // shader.setUniform("uLocusDm", locusDmValue);
 
     let locusAValue;
     switch (locusARadio.value()) {
@@ -155,7 +135,6 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_A_OPTIONS.NON_AGOUTI:
             locusAValue = [1, 1];
     }
-    shader.setUniform("uLocusA", locusAValue);
 
     let locusTValue;
     switch (locusTRadio.value()) {
@@ -168,7 +147,6 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_T_OPTIONS.BLOTCHED:
             locusTValue = [2, 2];
     }
-    shader.setUniform("uLocusT", locusTValue);
 
 
     let locusSpValue;
@@ -179,7 +157,6 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_SP_OPTIONS.NOT_SPOTTED:
             locusSpValue = [1, 1];
     }
-    shader.setUniform("uLocusSp", locusSpValue);
 
     let locusCValue;
     switch (locusCRadio.value()) {
@@ -198,7 +175,6 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_C_OPTIONS.ALBINISM:
             locusCValue = [3, 3];
     }
-    shader.setUniform("uLocusC", locusCValue);
 
     let locusWValue;
     switch (locusWRadio.value()) {
@@ -211,7 +187,18 @@ function passLocusValuesIntoShader(shader) {
         case LOCUS_W_OPTIONS.NO_WHITE:
             locusWValue = [2, 2];
     }
-    shader.setUniform("uLocusW", locusWValue);
+
+    return {
+        uOrangeColor: colors.orange,
+        uBlackColor: colors.black,
+        uLocusB: locusBValue,
+        uLocusO: locusOValue,
+        uLocusA: locusAValue,
+        uLocusT: locusTValue,
+        uLocusSp: locusSpValue,
+        uLocusC: locusCValue,
+        uLocusW: locusWValue,
+    };
 }
 
 function checkLocusInterdependence() {
