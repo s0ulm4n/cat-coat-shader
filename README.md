@@ -33,3 +33,7 @@ Brief description of the genes used by the model:
   * Dominant (W) - fully white cat (completely blocking skin and fur pigmentation). Co-dominant (S) - white spotting. Recessive (w) - no white.
   * Dominant (W) is epistatic over any other color genes.
   * In addition to whiteness, (W) often manifests in blue eyes and congenital deafness.
+
+### 3D model and textures
+* https://free3d.com/3d-model/cat-v1--522281.html
+* https://free3d.com/3d-model/cat-v1--326682.html

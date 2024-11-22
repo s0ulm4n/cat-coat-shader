@@ -276,21 +276,54 @@ void main() {
     
     // Apply base color to the body
     bodyColor *= baseColor;
+    
     // Apply white spotting (or make the entire body white)
-    bodyColor = 1.0 - (whiteness * (1.0 - bodyColor) + (1.0 - whiteness) * tex.rgb * 0.05);
+    // I forgot what happens here several times, so here's an explanation
+    //
+    // 1. Calculate "whiteness" - a float that indicates whether the current
+    //    fragment should be colored white or not.
+    // 2. "Whiteness" is 1.0 for fragments that SHOULD NOT be affected by white
+    //    spotting and 0.0 for fragments that SHOULD (there are also in-between
+    //    values). So the value is INVERSE of what the color actually is
+    //    (vec3(1.0) is white, vec3(0.0) is black), so we inverse it
+    //    (1.0 - whiteness) when we need to get the color.
+    // 3. Let's deal with the second part of this expression first:
+    //    We want to take the areas affected by white spotting, and instead of
+    //    making them completely white, have a little bit of texture showing.
+    //    So we invert "whiteness", multiply it by inverted texture (that will
+        //    give us inverted texture values in areas where whiteness === 0.0 and
+    //    color black in areas where whiteness === 1.0) and then multiply it
+    //    by 0.05 to make the inverted texture very faint.
+    // 4. The first part of the espression inverts the body color and multiplies
+    //    it by "whiteness", resulting in inverted color where whiteness === 1.0
+    //    and vec3(0.0) where whiteness ===  0.0.
+    // 5. Then we sum up the two expressions. Areas with whiteness === 0.0 will
+    //    result in faint texture from the second part, and areas with
+    //    whiteness === 1.0 will result in inverted bodyColor.
+    // 6. Then we invert the whole thing again, getting faint inverted texture
+    //    in areas where whiteness === 0.0 and regular color where whiteness === 1.0
+    bodyColor = 1.0 - (whiteness * (1.0 - bodyColor) + (1.0 - whiteness) * (1.0 - tex.rgb) * 0.1);
     // Apply colorpoint
-    bodyColor = 1.0 - (colorpoint * (1.0 - bodyColor) + (1.0 - colorpoint) * tex.rgb * 0.05);
+    bodyColor = 1.0 - (colorpoint * (1.0 - bodyColor) + (1.0 - colorpoint) * (1.0 - tex.rgb) * 0.1);
     // Apply the mask (only keep the color on the body)
     bodyColor.rgb = min(bodyColor.rgb, bodyMask.r);
     
     vec3 extrColor = tex.rgb;
     
+    // In this section we will exploit the fact that on the texture we're using,
+    // the eyes are on the left side of the image, and the ears and the nose are on
+    // the right side. This allows us to use step(0.5, uv.x) to target only one side
+    // of the texture.
+    // step(0.5, uv.x): this equals 0.0 for eyes, 1.0 for ears and nose.
+    // The inverse (1.0 - ...) equals 1.0 for eyes, 0.0 for ears and nose.
+    
     // Color ears and nose using base color
     extrColor *= baseColor * step(0.5, uv.x);
-    // Apply whiteness on the ears and nose
-    extrColor = 1.0 - (whiteness * (1.0 - extrColor) + (1.0 - whiteness) * tex.rgb * 0.05);
+    // Apply white spots on the ears and nose, but not eyes
+    float extrWhiteness = max(whiteness, 1.0 - step(0.5, uv.x));
+    extrColor = 1.0 - (extrWhiteness * (1.0 - extrColor) + (1.0 - extrWhiteness) * (1.0 - tex.rgb) * 0.1);
     // Apply colorpoint to the ears using a different function
-    extrColor = 1.0 - (extrColorpoint * (1.0 - extrColor) + (1.0 - extrColorpoint) * tex.rgb * 0.05);
+    extrColor = 1.0 - (extrColorpoint * (1.0 - extrColor) + (1.0 - extrColorpoint) * (1.0 - tex.rgb) * 0.1);
     // Color eyes using the eye color uniform
     extrColor += uEyeColor * tex.rgb * (1.0 - step(0.5, uv.x));
     // Apply the mask (only keep the color for extremities)
